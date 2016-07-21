@@ -61,4 +61,15 @@ class Request
     {
         return Base::getClientAddress();
     }
+
+    /**
+     * 获取上传的文件
+     *
+     * @param   $onlySuccessful
+     * @return  PR\FileInterface|PR\FileInterface[]|void
+     */
+    public static function getFiles($onlySuccessful = null)
+    {
+        return Base::getFiles($onlySuccessful);
+    }
 }

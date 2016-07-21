@@ -15,6 +15,13 @@ class BaseConfig
     protected static $settings = [];
 
     /**
+     * 开发环境配置数据
+     *
+     * @var array
+     */
+    protected static $env_setting = [];
+
+    /**
      * 默认配置目录路径
      *
      * @var string
@@ -99,5 +106,62 @@ class BaseConfig
         }
 
         self::$settings[$filename] = new \Phalcon\Config\Adapter\Php($file_path);
+    }
+
+    /**
+     * 优先从开发环境中获取配置项
+     *
+     * @param   string      $key    配置项
+     * @return  mixed|null
+     */
+    public static function getEnv($key = '')
+    {
+        if (self::$env_setting === null) {
+            return self::get($key);
+        }
+
+        $arr = explode('.', $key);
+
+        $value = null;
+        foreach ($arr as $kv) {
+            if (empty($kv)) {
+                $value = null;
+                break;
+            }
+            if ($value === null) {
+                if (isset(self::$env_setting->$kv)) {
+                    $value =  self::$env_setting->$kv;
+                    continue;
+                }
+                $value = null;
+                break;
+            } else {
+                if (isset($value->$kv)) {
+                    $value =  $value->$kv;
+                    continue;
+                }
+                $value = null;
+                break;
+            }
+        }
+
+        if ($value === null) {
+            return self::get($key);
+        }
+        return $value;
+    }
+
+    /**
+     * 初始化ENV配置文件
+     */
+    public static function initEnv()
+    {
+        $file_path = QP_ROOT_PATH . "dev.php";
+
+        if (!file_exists($file_path)) {
+            self::$env_setting = null;
+        }
+
+        self::$env_setting = new \Phalcon\Config\Adapter\Php($file_path);
     }
 }

@@ -43,7 +43,7 @@ class QpResponse
      * @param   string  $message    响应信息
      * @param   int     $status     响应状态码
      */
-    public static function send($message, $status)
+    public static function send($message = '', $status = 200)
     {
         if (self::$response === null) {
             self::init();

@@ -63,7 +63,7 @@ class DBConfig
      */
     public function getAllConnection()
     {
-        $config = Config::get('database.connection');
+        $config = Config::getEnv('database.connection');
 
         if (empty($config)) {
             throw new \InvalidArgumentException("'database'配置文件中的'connection'配置项无效：该配置必须是非空数组");
@@ -99,7 +99,7 @@ class DBConfig
      */
     public function getDefaultConnection()
     {
-        $config = Config::get('database.default');
+        $config = Config::getEnv('database.default');
 
         if (empty($config)) {
             throw new \InvalidArgumentException("'database'配置文件中的'default'配置项无效：该配置必须是非空数组");

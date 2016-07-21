@@ -73,4 +73,18 @@ class QpBaseRequest extends BaseRequest
         }
         return self::$clientIp;
     }
+
+    /**
+     * 获取上传的文件对象
+     *
+     * @param   $onlySuccessful
+     * @return  \Phalcon\Http\File[]|Request\File|Request\File[]|Request\FileInterface|Request\FileInterface[]|void
+     */
+    public static function getFiles($onlySuccessful)
+    {
+        if (self::$request === null) {
+            self::$request = new Request();
+        }
+        return self::$request->getUploadedFiles($onlySuccessful);
+    }
 }

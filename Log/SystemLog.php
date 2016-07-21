@@ -27,13 +27,13 @@ class SystemLog
             return false;
         }
 
-        if (! Config::get("app.request_start_log")) {
+        if (! Config::getEnv("app.request_start_log")) {
             return false;
         }
 
         $data = Request::nonPostParam();
 
-        if (Config::get("app.request_log_post")) {
+        if (Config::getEnv("app.request_log_post")) {
             $data = Request::param();
         }
 

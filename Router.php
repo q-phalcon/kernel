@@ -3,6 +3,7 @@
 namespace Qp\Kernel;
 
 use Qp\Kernel\Http\Router\QpRouter as Base;
+use Qp\Kernel\Http\Router\QpRouter;
 
 /**
  * QP框架核心模块：Http模块 - 路由模块
@@ -36,6 +37,13 @@ class Router
     private static $prefix = "";
 
     /**
+     * 当前处理的路由文件
+     *
+     * @var string
+     */
+    private static $router_file = "";
+
+    /**
      * 设置模块
      *
      * @param   array   $routers_files    前缀映射路由文件的数组
@@ -44,20 +52,20 @@ class Router
     public static function modules(array $routers_files)
     {
         if (self::$modules_status == 1) {
-            throw new \ErrorException("app/routers.php中，如果要使用'modules'方法，那只能将其放在其他方法之前！");
+            throw new \ErrorException("路由文件配置错误：app/routers.php中，如果要使用'modules'方法，那只能将其放在其他set方法之前！");
         }
 
         if (self::$modules_status == 2) {
-            throw new \ErrorException("路由设置文件中，最多只能调一次'modules'方法");
+            throw new \ErrorException("路由文件配置错误：路由设置文件中，最多只能全局调一次'modules'方法");
         }
 
         foreach ($routers_files as $prefix => $file) {
-
             if ($prefix !== Base::getPrefix() || $prefix == "") {
                 return;
             }
 
             $file = QP_ROOT_PATH . strval($file);
+            self::$router_file = $file;
 
             if (! file_exists($file)) {
                 $err_msg = "The file '" . str_replace(['\\','/'], DIRECTORY_SEPARATOR, $file) . "' is not found!";
@@ -92,7 +100,7 @@ class Router
         }
 
         // 匹配前缀
-        $prefix = $prefix = strval(array_get($router, 'prefix', ''));
+        $prefix = strval(array_get($router, 'prefix', ''));
         if ($prefix === "") {
             $prefix = self::$prefix;
         }
@@ -103,7 +111,7 @@ class Router
         // 匹配控制器
         $controllers = array_get($router, 'controllers', []);
         if (!is_array($controllers) || empty($controllers)) {
-            throw new \InvalidArgumentException("路由配置有误，'controllers'的值必须是数组");
+            throw new \InvalidArgumentException("路由配置有误，'controllers'的值必须是非空数组");
         }
         $controller = strval(array_get($controllers, Base::getController(), ''));
         if (empty($controller)) {
@@ -115,7 +123,7 @@ class Router
         self::handleConfigNamespace($namespace, $prefix);
 
         // 获取中间件，延迟处理 - 需要先加载其他模块才能处理中间件
-        $middleware = array_get($router, 'middleware', []);
+        $middleware = array_get($router, 'middlewares', []);
         Http\Middleware\QpMiddleware::handleConfigMiddleware($middleware, $namespace);
 
         Base::saveRouterData([
@@ -142,7 +150,8 @@ class Router
         }
 
         if ($namespace == "") {
-            throw new \ErrorException("当指定路由前缀时，'namespace'不能为空");
+            $file = empty(self::$router_file) ? 'app/routers.php' : str_replace(['/', '\\'], DIRECTORY_SEPARATOR, self::$router_file);
+            throw new \ErrorException("{$file}路由文件有错误！当指定路由前缀或模块化开发时，'namespace'不能为空");
         }
     }
 }

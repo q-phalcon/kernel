@@ -21,4 +21,15 @@ class Config
     {
         return BaseConfig::get($key);
     }
+
+    /**
+     * 通过指定的KEY，优先从ENV文件中读取配置，如果ENV中没有，再去config目录下获取
+     *
+     * @param   string      $key    参数KEY(文件名.数组索引[.数组索引...])
+     * @return  mixed               参数值
+     */
+    public static function getEnv($key = '')
+    {
+        return BaseConfig::getEnv($key);
+    }
 }

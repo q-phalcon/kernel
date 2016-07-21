@@ -52,7 +52,7 @@ class RedisConfig
      */
     private static function init()
     {
-        $config = Config::get("database.redis");
+        $config = Config::getEnv("database.redis");
         if (empty($config)) {
             throw new \InvalidArgumentException("配置项'database.redis'不能为空");
         }

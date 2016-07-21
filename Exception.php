@@ -77,12 +77,12 @@ class Exception
             return;
         }
 
-        if (Config::get("app.debug")) {
+        if (Config::getEnv("app.debug")) {
             echo "<pre>";
             echo "Exception : " . $error['message'] . "<br>";
             echo "Catch position: " . $error['file'] . " : " . $error['line'];
         } else {
-            echo strval(Config::get("app.prod_tip"));
+            echo strval(Config::getEnv("app.prod_tip"));
         }
     }
 
@@ -96,14 +96,14 @@ class Exception
             return;
         }
 
-        if (Config::get("app.debug")) {
+        if (Config::getEnv("app.debug")) {
             echo "<pre>";
             echo "Exception : " . $ex->getMessage() . "<br>";
             echo "Catch position : " . $ex->getFile() . " : " . $ex->getLine() . "<br><br>";
             echo $ex->getTraceAsString();
 
         }else{
-            echo strval(Config::get("app.prod_tip"));
+            echo strval(Config::getEnv("app.prod_tip"));
         }
     }
 

@@ -32,9 +32,10 @@ class Main
 
             // 4.加载配置文件 - /config目录下的php文件
             Config\BaseConfig::init(['app','database','session']);
+            Config\BaseConfig::initEnv();
 
             // 5.设置默认时区 - 从配置中读取
-            date_default_timezone_set(Config::get("app.timezone"));
+            date_default_timezone_set(Config::getEnv("app.timezone"));
 
             // 6.定义日志目录路径 - 从配置中读取
             $this->setLogPath();
@@ -81,7 +82,7 @@ class Main
      */
     private function setLogPath()
     {
-        $config_log_dir = Config::get("app.log_dir");
+        $config_log_dir = Config::getEnv("app.log_dir");
         if (! is_string($config_log_dir)) {
             throw new \ErrorException("配置项app.log_dir必须是字符串格式");
         }
@@ -96,7 +97,14 @@ class Main
      */
     private function setNamespace()
     {
-        $ns_config = (array) Config::get('app.namespace');
+        // 注册app目录，使其成为prs-4标准注册命名空间
+        $loader = new \Phalcon\Loader();
+        $loader->registerDirs(array(
+            QP_APP_PATH,
+        ));
+
+        // 注册用户自定义命名空间
+        $ns_config = (array) Config::getEnv('app.namespace');
 
         $ns = ['App' => QP_APP_PATH];
 
@@ -107,7 +115,7 @@ class Main
             $ns[$key] = QP_ROOT_PATH . $value;
         }
 
-        (new \Phalcon\Loader())->registerNamespaces($ns)->register();
+        $loader->registerNamespaces($ns)->register();
     }
 
     /**
@@ -122,16 +130,26 @@ class Main
         require_once QP_APP_PATH . "routers.php";
 
         if (QR::hasMatched() == false) {
-            throw new \ErrorException("无法匹配到路由 : " . QR::getRouterStr());
+            echo (new \App\Controllers\IndexController)->notFoundAction();
+            exit;
+        }
+
+        $matched_router_data = QR::getMatchedData();
+
+        $ns = $matched_router_data['namespace'];
+        $ctrl = $matched_router_data['controller'];
+        $m = QR::getMethod();
+
+        if (! method_exists(($ns . "\\" . $ctrl . "Controller"), $m . "Action")) {
+            echo (new \App\Controllers\IndexController)->notFoundAction();
+            exit;
         }
 
         $router = new \Phalcon\Mvc\Router();
-        $matched_router_data = QR::getMatchedData();
-
         $router->setDefaults([
-            "namespace" => $matched_router_data['namespace'],
-            "controller" => $matched_router_data['controller'],
-            "action" => QR::getMethod(),
+            "namespace" => $ns,
+            "controller" => $ctrl,
+            "action" => $m,
         ]);
 
         return $router;
@@ -194,7 +212,8 @@ class Main
     /**
      * 设置请求和DI注入服务
      *
-     * @param   \Phalcon\DI\FactoryDefault  $di     Phalcon的DI类
+     * @param   \Phalcon\DI\FactoryDefault  $di         Phalcon的DI类
+     * @param   \Phalcon\Mvc\Router         $router     Phalcon路由对象
      */
     private function setRequest(&$di, &$router)
     {
@@ -221,11 +240,9 @@ class Main
     private function handleRequestAndEnd(&$di)
     {
         $response = Http\Response\QpResponse::getResponse();
-
         $response->setContent(
             (new \Phalcon\Mvc\Application($di))->handle()->getContent()
         );
-
         $response->send();
     }
 }

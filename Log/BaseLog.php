@@ -38,8 +38,8 @@ class BaseLog
     public static function isLog($log_level)
     {
         if (self::$log_mode === null) {
-            $log_mode_config = Config::get("app.log_mode");
-            if (! is_int($log_mode_config) || $log_mode_config < 0 || $log_mode_config > 8) {
+            $log_mode_config = Config::getEnv("app.log_mode");
+            if (! $log_mode_config < 0 || $log_mode_config > 8) {
                 throw new \InvalidArgumentException("日志模式必须是0到8之间的整数，请检查配置项:app.log_mode");
             }
             self::$log_mode = $log_mode_config;

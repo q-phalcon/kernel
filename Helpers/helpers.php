@@ -30,7 +30,7 @@ if (! function_exists('array_first')) {
      * @param   array   $needle     参数数组
      * @return  mixed
      */
-    function array_first(array $needle)
+    function array_first(array &$needle)
     {
         $re = null;
         foreach ($needle as $v) {
@@ -48,7 +48,7 @@ if (! function_exists('array_first_key')) {
      * @param   array   $needle     参数数组
      * @return  mixed
      */
-    function array_first_key(array $needle)
+    function array_first_key(array &$needle)
     {
         $re = null;
         foreach ($needle as $k => $v) {
@@ -83,5 +83,18 @@ if (! function_exists('dump')) {
     {
         echo "<pre>";
         var_dump($var);
+    }
+}
+
+if (! function_exists('env')) {
+    /**
+     * 优先从开发环境中读取配置
+     *
+     * @param   mixed   $config_str     配置项
+     * @return  mixed
+     */
+    function env($config_str = '')
+    {
+        return \Qp\Kernel\Config\BaseConfig::getEnv($config_str);
     }
 }

@@ -9,7 +9,7 @@ use Qp\Kernel\Http\Response\QpResponse as Base;
  */
 class Response
 {
-    public static function send($message, $status)
+    public static function send($message = '', $status = 200)
     {
         Base::send($message, $status);
     }

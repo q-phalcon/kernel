@@ -73,9 +73,9 @@ class BaseSession
      */
     protected static function init()
     {
-        $open = boolval(Config::get('session.open'));
+        $open = boolval(Config::getEnv('session.open'));
 
-        $driver = strval(Config::get('session.driver'));
+        $driver = strval(Config::getEnv('session.driver'));
         if (! in_array($driver, self::$driver_allow)) {
             throw new \InvalidArgumentException("不允许的Session驱动方式:{$driver}");
         }
@@ -139,7 +139,7 @@ class BaseSession
      */
     private static function getExpire()
     {
-        $lifetime = Config::get("session.lifetime");
+        $lifetime = Config::getEnv("session.lifetime");
         if (! is_int($lifetime)) {
             throw new \InvalidArgumentException("会话过期时间设置不正确，必须为数组！请正确使用配置项'session.lifetime'");
         }
