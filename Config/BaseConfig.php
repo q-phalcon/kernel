@@ -53,14 +53,14 @@ class BaseConfig
      */
     public static function get($key = '')
     {
-        if (!is_string($key) || is_null($key)) {
+        if ($key === '') {
             return null;
         }
 
         $arr = explode('.', $key);
 
         $config_file = $arr[0];
-        if (!isset(self::$settings[$config_file])) {
+        if (! isset(self::$settings[$config_file])) {
             self::addConfigFromFile($config_file);
         }
 
@@ -100,7 +100,7 @@ class BaseConfig
     {
         $file_path = self::$default_dir . $filename . ".php";
 
-        if (!file_exists($file_path)) {
+        if (! file_exists($file_path)) {
             $err_msg = "The file '" . str_replace(['\\','/'], DIRECTORY_SEPARATOR, $file_path) . "' is not found!";
             throw new \ErrorException($err_msg);
         }
@@ -156,9 +156,9 @@ class BaseConfig
      */
     public static function initEnv()
     {
-        $file_path = QP_ROOT_PATH . "dev.php";
+        $file_path = QP_ROOT_PATH . ".php";
 
-        if (!file_exists($file_path)) {
+        if (! file_exists($file_path)) {
             self::$env_setting = null;
         }
 

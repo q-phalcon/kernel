@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel\Database;
 
@@ -26,13 +27,8 @@ class QpDB extends BaseDB
      * @return  \Phalcon\Db\Adapter\Pdo\Mysql|\Phalcon\Db\Adapter\Pdo\Oracle|\Phalcon\Db\Adapter\Pdo\Postgresql|\Phalcon\Db\Adapter\Pdo\Sqlite
      * @throws  \ErrorException
      */
-    public static function getConnection($connection_name = null)
+    public static function getConnection(string $connection_name = '')
     {
-        if (! is_string($connection_name) || $connection_name == "") {
-            $debug_msg = "传入的数据库链接名必须是字符串" . StackTrace::getCode(3);
-            throw new \InvalidArgumentException($debug_msg);
-        }
-
         if (self::$conn_list === null) {
             self::initConnection();
         }

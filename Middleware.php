@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel;
 
@@ -25,12 +26,8 @@ class Middleware
      * @param   string  $message    响应消息
      * @param   int     $status     响应状态码
      */
-    public static function end($message = "", $status = 200)
+    public static function end(string $message = "", int $status = 200)
     {
-        if (! is_string($message)) {
-            $debug_msg = "响应内容必须是字符串" . \Qp\Kernel\StackTrace::getLastCode();
-            throw new \InvalidArgumentException($debug_msg);
-        }
         Base::end($message, $status);
     }
 }

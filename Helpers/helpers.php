@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 if (! function_exists('array_get')) {
     /**
@@ -9,7 +10,7 @@ if (! function_exists('array_get')) {
      * @param   mixed   $default    指定默认值，null
      * @return  mixed
      */
-    function array_get(array $arr, $key, $default = null)
+    function array_get(array $arr, string $key, $default = null)
     {
         if (is_null($key)) {
             return $arr;
@@ -86,15 +87,15 @@ if (! function_exists('dump')) {
     }
 }
 
-if (! function_exists('env')) {
+if (! function_exists('config')) {
     /**
      * 优先从开发环境中读取配置
      *
-     * @param   mixed   $config_str     配置项
+     * @param   mixed   $key        配置项
      * @return  mixed
      */
-    function env($config_str = '')
+    function config(string $key = '')
     {
-        return \Qp\Kernel\Config\BaseConfig::getEnv($config_str);
+        return \Qp\Kernel\Config\BaseConfig::getEnv($key);
     }
 }

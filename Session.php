@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel;
 
@@ -19,7 +20,7 @@ class Session
      * @return  mixed
      * @throws  \ErrorException
      */
-    public static function get($index, $default_value = null)
+    public static function get(string $index, $default_value = null)
     {
         Base::checkOpen();
         return Base::getSessionObject()->get($index, $default_value);
@@ -36,9 +37,14 @@ class Session
     public static function getAll()
     {
         Base::checkOpen();
+        if (Base::driver() == "file") {
+            return $_SESSION;
+        }
         $session = Base::getSessionObject();
-        $session_id = $session->getId();
-        $data_str = $session->read($session_id);
+        $data_str = $session->read($session->getId());
+        if ($data_str === null) {
+            return [];
+        }
         return unserialize($data_str);
     }
 
@@ -49,7 +55,7 @@ class Session
      * @param   mixed   $value  数据
      * @throws  \ErrorException
      */
-    public static function set($index, $value)
+    public static function set(string $index, $value)
     {
         Base::checkOpen();
         Base::getSessionObject()->set($index, $value);
@@ -64,6 +70,11 @@ class Session
     public static function setBatch(array $data)
     {
         Base::checkOpen();
+        if (Base::driver() == "file") {
+            $_SESSION = $data;
+            return;
+        }
+        self::removeAll();
         $session = Base::getSessionObject();
         foreach ($data as $index => $value) {
             $session->set($index, $value);
@@ -79,7 +90,31 @@ class Session
     public static function close()
     {
         Base::checkOpen();
+        if (Base::driver() == 'file') {
+            if (session_status() == PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            return true;
+        }
         return Base::getSessionObject()->close();
+    }
+
+    /**
+     * 开启Session
+     *
+     * @return  bool|void
+     * @throws  \ErrorException
+     */
+    public static function start()
+    {
+        Base::checkOpen();
+        if (Base::driver() == 'file') {
+            if (session_status() != PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            return true;
+        }
+        return Base::getSessionObject()->start();
     }
 
     /**
@@ -97,11 +132,15 @@ class Session
     /**
      * 获取Session过期时间
      *
+     * @return  int
      * @throws  \ErrorException
      */
     public static function getLifetime()
     {
         Base::checkOpen();
+        if (Base::driver() == 'file') {
+            return intval(ini_get('session.cookie_lifetime'));
+        }
         return Base::getSessionObject()->getLifetime();
     }
 
@@ -113,7 +152,7 @@ class Session
     public static function getOptions()
     {
         Base::checkOpen();
-        Base::getSessionObject()->getOptions();
+        return Base::getSessionObject()->getOptions();
     }
 
     /**
@@ -123,7 +162,7 @@ class Session
      * @return  bool
      * @throws  \ErrorException
      */
-    public static function has($index)
+    public static function has(string $index)
     {
         Base::checkOpen();
         return Base::getSessionObject()->has($index);
@@ -135,34 +174,21 @@ class Session
      * @param   bool    $deleteOldSessionId     是否同时删除旧会话
      * @throws  \ErrorException
      */
-    public static function regenerateId($deleteOldSessionId = true)
+    public static function regenerateId(bool $deleteOldSessionId = true)
     {
         Base::checkOpen();
-        Base::getSessionObject()->regenerateId($deleteOldSessionId);
-    }
-
-    /**
-     * 指定会话ID
-     *
-     * @param   string  $session_id 新的会话ID
-     * @throws  \ErrorException
-     */
-    public static function setId($session_id)
-    {
-        Base::checkOpen();
-        Base::getSessionObject()->setId($session_id);
-    }
-
-    /**
-     * 读取Session序列化形式的数据
-     *
-     * @return  mixed
-     * @throws  \ErrorException
-     */
-    public static function read()
-    {
-        Base::checkOpen();
-        return Base::getSessionObject()->read(self::getId());
+        if (Base::driver() == 'file') {
+            session_regenerate_id($deleteOldSessionId);
+            return true;
+        }
+        if ($deleteOldSessionId) {
+            self::removeAll();
+        }
+        $random = new \Phalcon\Security\Random();
+        session_write_close();
+        session_id(str_replace('-', '', $random->uuid()));
+        session_start();
+        return true;
     }
 
     /**
@@ -171,7 +197,7 @@ class Session
      * @param   string  $index  键名
      * @throws  \ErrorException
      */
-    public static function remove($index)
+    public static function remove(string $index)
     {
         Base::checkOpen();
         Base::getSessionObject()->remove($index);
@@ -182,10 +208,12 @@ class Session
      */
     public static function removeAll()
     {
-        $data = self::getAll();
-        if (! is_array($data)) {
+        Base::checkOpen();
+        if (Base::driver() == 'file') {
+            $_SESSION = [];
             return;
         }
+        $data = self::getAll();
         $session = Base::getSessionObject();
         foreach ($data as $index => $value) {
             $session->remove($index);

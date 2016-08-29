@@ -40,7 +40,7 @@ class DBConfig
     }
 
     /**
-     * 初始化定义默认的数据库匹配模式
+     * 初始化定义默认的数据库匹配模式和常量
      */
     private static function initDefaultFetch()
     {
@@ -49,8 +49,18 @@ class DBConfig
             throw new \InvalidArgumentException("'database'配置文件中的'fetch'配置项无效：请参照PDO类的常量");
         }
 
-        if (! defined(QP_DB_FETCH_MODE)) {
+        if (! defined('QP_DB_FETCH_MODE')) {
             define('QP_DB_FETCH_MODE', $fetch);
+        }
+
+        if (! defined('BIND_PARAM_INT')) {
+            define('BIND_PARAM_INT', \Phalcon\Db\Column::BIND_PARAM_INT);
+        }
+        if (! defined('BIND_PARAM_STR')) {
+            define('BIND_PARAM_STR', \Phalcon\Db\Column::BIND_PARAM_STR);
+        }
+        if (! defined('BIND_PARAM_STR')) {
+            define('BIND_PARAM_DECIMAL', \Phalcon\Db\Column::BIND_PARAM_DECIMAL);
         }
 
         self::$default_fetch = $fetch;
@@ -83,10 +93,17 @@ class DBConfig
 
             $driver_str = isset($value->driver) ? $value->driver : null;
             $driver = strtolower($driver_str);
-
             unset($value->driver);
 
-            $conn[$key] = new ConnectionObj($key, $driver, (array) $value);
+            $value = (array) $value;
+            $value['options'] = [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+                \PDO::ATTR_STRINGIFY_FETCHES => false,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => $this->getDefaultFetch(),
+            ];
+
+            $conn[$key] = new ConnectionObj($key, $driver, $value);
         }
 
         return $conn;
@@ -107,9 +124,16 @@ class DBConfig
 
         $driver_str = isset($config->driver) ? $config->driver : null;
         $driver = strtolower($driver_str);
-
         unset($config->driver);
 
-        return new ConnectionObj('db', $driver, (array) $config);
+        $config = (array) $config;
+        $config['options'] = [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_EMULATE_PREPARES => false,
+            \PDO::ATTR_STRINGIFY_FETCHES => false,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => $this->getDefaultFetch(),
+        ];
+
+        return new ConnectionObj('db', $driver, $config);
     }
 }

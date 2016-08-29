@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel\Http\Middleware;
 
@@ -38,12 +39,9 @@ class QpMiddleware
      * @param   array   $middleware     配置的中间件数组
      * @param   string  $namespace      控制器所在的命名空间
      */
-    public static function handleConfigMiddleware(&$middleware, $namespace)
+    public static function handleConfigMiddleware(array &$middleware, string $namespace)
     {
-        if (! is_array($middleware)) {
-            throw new \InvalidArgumentException("路由配置有误，'middleware'配置项必须是数组");
-        }
-        if ($middleware == []) {
+        if ($middleware === []) {
             return;
         }
 
@@ -98,7 +96,11 @@ class QpMiddleware
             self::$response_status = 200;
             (new $middleware())->handle();
             if (self::$handle_status == 2) {
+                if (json_decode(self::$response_message, true) != []) {
+                    \Qp\Kernel\Response::response()->setContentType('application/json');
+                }
                 \Qp\Kernel\Response::send(self::$response_message, self::$response_status);
+                exit;
             }
         }
         self::$handle_status = 3;

@@ -72,6 +72,8 @@ class Main
 
         } catch (\Exception $ex) {
             $QpException->fatalHandler($ex);
+        } catch (\Throwable $ex) {
+            $QpException->fatalHandler($ex);
         }
     }
 
@@ -104,7 +106,7 @@ class Main
         ));
 
         // 注册用户自定义命名空间
-        $ns_config = (array) Config::getEnv('app.namespace');
+        $ns_config = (array) Config::get('app.namespace');
 
         $ns = ['App' => QP_APP_PATH];
 

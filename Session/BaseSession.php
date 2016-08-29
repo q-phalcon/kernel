@@ -48,6 +48,13 @@ class BaseSession
     protected static $all_prefix_key = null;
 
     /**
+     * 会话过期时间
+     *
+     * @var null|int
+     */
+    protected static $expire = null;
+
+    /**
      * session对象
      *
      * @var null|Files|Redis
@@ -111,7 +118,8 @@ class BaseSession
      */
     protected static function initRedisConfigData()
     {
-        $conn_name = array_first_key(RedisConfig::getList());
+        $tmp_rcList = RedisConfig::getList();
+        $conn_name = array_first_key($tmp_rcList);
         $conn_obj = RedisConfig::getConfig($conn_name);
         $config_data = $conn_obj->otherConfig();
         $config_data['host'] = $conn_obj->host();
@@ -123,7 +131,7 @@ class BaseSession
         $config_data['persistent'] = true;
         $config_data['index'] = $conn_obj->database();
         $config_data['prefix'] = $conn_obj->prefix();
-        $config_data['lifetime'] = self::getExpire();
+        $config_data['lifetime'] = self::$expire = self::getExpire();
 
         self::$all_prefix_key = self::$phalcon_prefix . $config_data['prefix'];
         self::$conn_name = $conn_name;
@@ -141,7 +149,7 @@ class BaseSession
     {
         $lifetime = Config::getEnv("session.lifetime");
         if (! is_int($lifetime)) {
-            throw new \InvalidArgumentException("会话过期时间设置不正确，必须为数组！请正确使用配置项'session.lifetime'");
+            throw new \InvalidArgumentException("会话过期时间设置不正确，必须为整数！请正确使用配置项'session.lifetime'");
         }
         if ($lifetime <= 0) {
             return -1;

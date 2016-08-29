@@ -47,6 +47,19 @@ class QpSession extends BaseSession
     }
 
     /**
+     * 获取Session过期时间 (秒)
+     *
+     * @return  int
+     */
+    public static function getExpire()
+    {
+        if (self::$expire === null) {
+            self::initRedisConfigData();
+        }
+        return self::$expire;
+    }
+
+    /**
      * 获取Session对象
      *
      * @return  \Phalcon\Session\Adapter\Redis

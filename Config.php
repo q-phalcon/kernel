@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel;
 
@@ -17,7 +18,7 @@ class Config
      * @param   string      $key    参数KEY(文件名.数组索引[.数组索引...])
      * @return  mixed               参数值
      */
-    public static function get($key = '')
+    public static function get(string $key = '')
     {
         return BaseConfig::get($key);
     }
@@ -28,7 +29,7 @@ class Config
      * @param   string      $key    参数KEY(文件名.数组索引[.数组索引...])
      * @return  mixed               参数值
      */
-    public static function getEnv($key = '')
+    public static function getEnv(string $key = '')
     {
         return BaseConfig::getEnv($key);
     }

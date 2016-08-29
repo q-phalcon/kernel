@@ -72,4 +72,14 @@ class Request
     {
         return Base::getFiles($onlySuccessful);
     }
+
+    /**
+     * 获取请求方式
+     *
+     * @return  string
+     */
+    public static function method()
+    {
+        return Base::getRequestObject()->getMethod();
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace Qp\Kernel\Log;
 
@@ -39,13 +40,13 @@ class BaseLog
     {
         if (self::$log_mode === null) {
             $log_mode_config = Config::getEnv("app.log_mode");
-            if (! $log_mode_config < 0 || $log_mode_config > 8) {
+            if ($log_mode_config < 0 || $log_mode_config > 8) {
                 throw new \InvalidArgumentException("日志模式必须是0到8之间的整数，请检查配置项:app.log_mode");
             }
             self::$log_mode = $log_mode_config;
         }
 
-        if (self::$log_mode >= array_search($log_level, self::$log_level_allow)) {
+        if (self::$log_mode <= array_search($log_level, self::$log_level_allow)) {
             return true;
         }
 
@@ -60,17 +61,13 @@ class BaseLog
      * @param   string  $log_level  日志等级
      * @return  string              返回文件名
      */
-    public static function handle_log_file($modular, $log_level)
+    public static function handle_log_file(string $modular, string $log_level)
     {
-        if (! is_string($modular)) {
-            throw new \InvalidArgumentException("模块名必须是字符串格式");
-        }
-
         $modular = str_replace(['/','\\'], '_', $modular);
 
         $dir_path = QP_LOG_PATH . $modular . '/';
 
-        if (!file_exists($dir_path)) {
+        if (! file_exists($dir_path)) {
             mkdir($dir_path, 0777, true);
         }
 
@@ -89,7 +86,7 @@ class BaseLog
      * @param   array   $context    占位数组
      * @return  string
      */
-    private static function interpolate($message, array $context = [])
+    private static function interpolate(string $message, array $context = [])
     {
         $replace = [];
         foreach ($context as $key => $val) {

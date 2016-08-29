@@ -16,10 +16,10 @@ class Exception
      *
      * @var int
      */
-    private $exception_type = E_USER_ERROR | E_USER_NOTICE | E_USER_WARNING | E_USER_DEPRECATED | E_WARNING | E_NOTICE;
+    private $exception_type = E_ALL;
 
     /**
-     * 致命错误
+     * 致命错误类型
      *
      * @var array
      */
@@ -32,6 +32,7 @@ class Exception
      */
     public function __construct()
     {
+        ini_set("display_errors", 1);
         error_reporting($this->exception_type);
         set_error_handler([$this, 'handleError']);
         set_exception_handler([$this, 'handleException']);
@@ -39,16 +40,15 @@ class Exception
     }
 
     /**
-     * 异常处理：抛出错误级别的异常
+     * set_error_handler() 方法的回调函数
      *
      * @param   int             $level      错误等级
      * @param   string          $message    错误消息
      * @param   string          $file       错误的文件名
      * @param   int             $line       错误的代码行数
-     * @param   array           $context    错误堆栈消息
      * @throws  \ErrorException
      */
-	public function handleError($level, $message, $file = '', $line = 0, $context = [])
+	public function handleError(int $level, string $message, string $file, int $line)
     {
         if (error_reporting() && $level) {
             throw new \ErrorException($message, 0, $level, $file, $line);
@@ -56,55 +56,55 @@ class Exception
     }
 
     /**
-     * 处理异常
+     * set_exception_handler() 方法的回调函数
      *
-     * @param   \Exception  $ex  异常对象
+     * @param   \Exception|\Throwable  $ex  异常对象
      * @throws  \ErrorException
      */
     public function handleException($ex)
     {
-        if ($ex instanceof \Exception) {
-            throw new \ErrorException($ex);
+        if ($ex instanceof \Exception || $ex instanceof \Throwable) {
+            throw new \ErrorException($ex->getMessage(), $ex->getCode(), E_ALL, $ex->getFile(), $ex->getLine());
         }
     }
 
     /**
-     * 最终错误：遇到严重的错误，直接终止程序
+     * register_shutdown_function() 方法的回调函数
      */
     public function handleShutdown()
     {
-        if (is_null($error = error_get_last()) || !$this->isFatal($error['type'])) {
+        if (is_null($error = error_get_last()) || ! $this->isFatal($error['type'])) {
             return;
         }
 
         if (Config::getEnv("app.debug")) {
             echo "<pre>";
-            echo "Exception : " . $error['message'] . "<br>";
+            echo "Exception : " , $error['message'] , "<br>";
             echo "Catch position: " . $error['file'] . " : " . $error['line'];
         } else {
             echo strval(Config::getEnv("app.prod_tip"));
         }
+
+        exit;
     }
 
     /**
-     * QP框架最外层捕捉到异常后的处理方式
-     * @param $ex
+     * QP框架异常处理方式
+     *
+     * @param   \Exception|\Throwable   $ex
      */
     public function fatalHandler($ex)
     {
-        if (! $ex instanceof \Exception) {
-            return;
-        }
-
         if (Config::getEnv("app.debug")) {
             echo "<pre>";
-            echo "Exception : " . $ex->getMessage() . "<br>";
+            echo "Exception : " , $ex->getMessage() , "<br>";
             echo "Catch position : " . $ex->getFile() . " : " . $ex->getLine() . "<br><br>";
             echo $ex->getTraceAsString();
-
         }else{
             echo strval(Config::getEnv("app.prod_tip"));
         }
+
+        exit;
     }
 
     /**
@@ -115,7 +115,7 @@ class Exception
      * @param	int		$type		Php Error Level
      * @return	bool
      */
-    protected function isFatal($type)
+    protected function isFatal(int $type)
     {
         return in_array($type, $this->fatal_error);
     }
