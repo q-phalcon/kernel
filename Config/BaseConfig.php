@@ -160,6 +160,7 @@ class BaseConfig
 
         if (! file_exists($file_path)) {
             self::$env_setting = null;
+            return;
         }
 
         self::$env_setting = new \Phalcon\Config\Adapter\Php($file_path);

@@ -71,8 +71,11 @@ class Main
             $this->handleRequestAndEnd($di);
 
         } catch (\Exception $ex) {
+            Log\SystemLog::error_log($ex);
             $QpException->fatalHandler($ex);
+
         } catch (\Throwable $ex) {
+            Log\SystemLog::error_log($ex);
             $QpException->fatalHandler($ex);
         }
     }
