@@ -58,9 +58,10 @@ class SystemLog
      * 记录起始请求日志
      * 记录成功返回true，失败或没记录日志返回false
      *
+     * @param  \Exception|\Throwable   $ex
      * @return  bool
      */
-    public static function error_log(\Exception $ex)
+    public static function error_log($ex)
     {
         if (! BaseLog::isLog('error')) {
             return false;
