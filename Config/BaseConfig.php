@@ -34,13 +34,13 @@ class BaseConfig
      * @param   array   $init_config_files  需要初始化的文件名(不包括后缀)
      * @throws  \ErrorException
      */
-    public static function init(array $init_config_files)
+    public static function init($init_config_files)
     {
         self::$settings = [];
         self::$default_dir = QP_CONFIG_PATH;
 
         foreach ($init_config_files as $filename) {
-            self::addConfigFromFile(strval($filename));
+            self::addConfigFromFile($filename);
         }
     }
 
@@ -102,7 +102,7 @@ class BaseConfig
 
         if (! file_exists($file_path)) {
             $err_msg = "The file '" . str_replace(['\\','/'], DIRECTORY_SEPARATOR, $file_path) . "' is not found!";
-            throw new \ErrorException($err_msg);
+            throw new \Exception($err_msg);
         }
 
         self::$settings[$filename] = new \Phalcon\Config\Adapter\Php($file_path);

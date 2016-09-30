@@ -5,9 +5,9 @@ if (! function_exists('array_get')) {
     /**
      * 从数组中获取值，如果不存在，则返回指定的默认值
      *
-     * @param   array   $arr        数组
-     * @param   string  $key        Key
-     * @param   mixed   $default    指定默认值，null
+     * @param   array           $arr        数组
+     * @param   string|integer  $key        Key
+     * @param   mixed           $default    指定默认值，null
      * @return  mixed
      */
     function array_get(array $arr, string $key, $default = null)
@@ -63,13 +63,15 @@ if (! function_exists('array_first_key')) {
 if (! function_exists('dd')) {
     /**
      * 输出传入的数据，并结束请求
-     *
-     * @param   mixed   $var    要打印的值
      */
-    function dd($var)
+    function dd()
     {
         echo "<pre>";
-        var_dump($var);
+        $arg_list = func_get_args();
+        foreach ($arg_list as $value) {
+            var_dump($value);
+            echo "<br>";
+        }
         exit;
     }
 }
@@ -77,13 +79,15 @@ if (! function_exists('dd')) {
 if (! function_exists('dump')) {
     /**
      * 输出传入的数据，带有Html格式的样式
-     *
-     * @param   mixed   $var    要打印的值
      */
     function dump($var)
     {
         echo "<pre>";
-        var_dump($var);
+        $arg_list = func_get_args();
+        foreach ($arg_list as $value) {
+            var_dump($value);
+            echo "<br>";
+        }
     }
 }
 

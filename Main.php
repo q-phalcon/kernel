@@ -10,65 +10,148 @@ use Qp\Kernel\Session\QpSession as QS;
  */
 class Main
 {
-    /**
-     * 启动程序
-     */
-    public function start()
+    public function __construct()
     {
-        // 1.定义QP框架需要的目录路径
         define('QP_ROOT_PATH' , dirname(dirname(dirname(__DIR__))) . DIRECTORY_SEPARATOR);
         define('QP_APP_PATH' , QP_ROOT_PATH . 'app' . DIRECTORY_SEPARATOR);
         define('QP_VIEW_PATH' , QP_ROOT_PATH . 'app_view' . DIRECTORY_SEPARATOR);
         define('QP_CONFIG_PATH', QP_ROOT_PATH . 'config' . DIRECTORY_SEPARATOR);
         define('QP_TMP_PATH', QP_ROOT_PATH . 'tmp' . DIRECTORY_SEPARATOR);
 
-        // 2.加载常用函数到内存
         require_once "Helpers/helpers.php";
+    }
 
-        // 3.加载QP自定义的异常模块 - 因为Phalcon的Exception在使用上有问题，因此需要重新实现
+    /**
+     * 启动程序 - 常规HTTP请求
+     */
+    public function start()
+    {
         $QpException = new Exception();
-
         try {
 
-            // 4.加载配置文件 - /config目录下的php文件
-            Config\BaseConfig::init(['app','database','session']);
+            // 1.加载配置文件 - /config目录下的php文件
+            Config\BaseConfig::init(['app', 'database', 'session']);
             Config\BaseConfig::initEnv();
 
-            // 5.设置默认时区 - 从配置中读取
+            // 2.设置默认时区 - 从配置中读取
             date_default_timezone_set(Config::getEnv("app.timezone"));
 
-            // 6.定义日志目录路径 - 从配置中读取
+            // 3.定义日志目录路径 - 从配置中读取
             $this->setLogPath();
 
-            // 7.记录请求日志
+            // 4.记录请求日志
             Log\SystemLog::request_start_log();
 
-            // 8.注册命名空间
+            // 5.注册命名空间
             $this->setNamespace();
 
-            // 9.加载路由模块
+            // 6.加载路由模块
             $router = $this->handleRouter();
 
-            // 10.定义Phalcon的DI
+            // 7.定义Phalcon的DI
             $di = new \Phalcon\DI\FactoryDefault();
 
-            // 11.预加载数据库链接
+            // 8.预加载数据库链接
             $this->handleDBConnection($di);
 
-            // 12.设置Redis数据库连接
+            // 9.设置Redis数据库连接
             $this->handleRedis($di);
 
-            // 13.设置会话 - 防止跨域攻击
+            // 10.设置会话 - 防止跨域攻击
             $this->handleSession($di);
 
-            // 14.处理中间件
+            // 11.处理中间件
             $this->handleMiddleware();
 
-            // 15.设置请求
+            // 12.设置请求
             $this->setRequest($di, $router);
 
-            // 16.开始请求，并处理响应
+            // 13.开始请求，并处理响应
             $this->handleRequestAndEnd($di);
+
+        } catch (\Exception $ex) {
+            Log\SystemLog::error_log($ex);
+            $QpException->fatalHandler($ex);
+        } catch (\Throwable $ex) {
+            Log\SystemLog::error_log($ex);
+            $QpException->fatalHandler($ex);
+        }
+    }
+
+    /**
+     * 定时任务脚本入口
+     */
+    public function task()
+    {
+        $QpException = new Exception();
+        try {
+
+            // 1.加载配置文件 - /config目录下的php文件
+            Config\BaseConfig::init(['app', 'database', 'session']);
+            Config\BaseConfig::initEnv();
+
+            // 2.设置默认时区 - 从配置中读取
+            date_default_timezone_set(Config::getEnv("app.timezone"));
+
+            // 3.定义日志目录路径 - 从配置中读取
+            $this->setLogPath();
+
+            // 4.注册命名空间
+            $this->setNamespace();
+
+            // 5.定义Phalcon的DI
+            $di = new \Phalcon\DI\FactoryDefault();
+
+            // 6.预加载数据库链接
+            $this->handleDBConnection($di);
+
+            // 7.设置Redis数据库连接
+            $this->handleRedis($di);
+
+            // 8.处理任务
+            $this->handleTask($di);
+
+        } catch (\Exception $ex) {
+            Log\SystemLog::error_log($ex);
+            $QpException->fatalHandler($ex);
+        } catch (\Throwable $ex) {
+            Log\SystemLog::error_log($ex);
+            $QpException->fatalHandler($ex);
+        }
+    }
+
+    /**
+     * 定时任务刷新入口
+     */
+    public function task_refresh()
+    {
+        $QpException = new Exception();
+        try {
+
+            // 1.加载配置文件 - /config目录下的php文件
+            Config\BaseConfig::init(['app', 'database', 'session']);
+            Config\BaseConfig::initEnv();
+
+            // 2.设置默认时区 - 从配置中读取
+            date_default_timezone_set(Config::getEnv("app.timezone"));
+
+            // 3.定义日志目录路径 - 从配置中读取
+            $this->setLogPath();
+
+            // 4.注册命名空间
+            $this->setNamespace();
+
+            // 5.定义Phalcon的DI
+            $di = new \Phalcon\DI\FactoryDefault();
+
+            // 6.预加载数据库链接
+            $this->handleDBConnection($di);
+
+            // 7.设置Redis数据库连接
+            $this->handleRedis($di);
+
+            // 8.处理刷新任务
+            $this->handleTaskRefresh($di);
 
         } catch (\Exception $ex) {
             Log\SystemLog::error_log($ex);
@@ -248,5 +331,72 @@ class Main
             (new \Phalcon\Mvc\Application($di))->handle()->getContent()
         );
         $response->send();
+    }
+
+    /**
+     * 开始处理任务
+     *
+     * @param   \Phalcon\DI\FactoryDefault  $di     Phalcon的DI类
+     */
+    private function handleTask(&$di)
+    {
+        $router = new \Phalcon\Mvc\Router();
+        $router->setDefaults([
+            "namespace" => 'App\Task',
+            "controller" => 'QpTask',
+            "action" => 'kernel',
+        ]);
+
+        $di->set('router', $router);
+
+        $di->set('url', function () {
+            $url = new \Phalcon\Mvc\Url();
+            $url->setBaseUri(QP_ROOT_PATH);
+            return $url;
+        });
+
+        $di->set('view', function () {
+            $view = new \Phalcon\Mvc\View();
+            $view->setViewsDir(QP_VIEW_PATH);
+            return $view;
+        });
+
+        Task\BaseTask::initData();
+        (new \Phalcon\Mvc\Application($di))->handle();
+        Task\BaseTask::handleTask();
+    }
+
+    /**
+     * 开始刷新任务
+     *
+     * @param   \Phalcon\DI\FactoryDefault  $di     Phalcon的DI类
+     */
+    private function handleTaskRefresh(&$di)
+    {
+        $router = new \Phalcon\Mvc\Router();
+        $router->setDefaults([
+            "namespace" => 'App\Task',
+            "controller" => 'QpTask',
+            "action" => 'kernel',
+        ]);
+
+        $di->set('router', $router);
+
+        $di->set('url', function () {
+            $url = new \Phalcon\Mvc\Url();
+            $url->setBaseUri(QP_ROOT_PATH);
+            return $url;
+        });
+
+        $di->set('view', function () {
+            $view = new \Phalcon\Mvc\View();
+            $view->setViewsDir(QP_VIEW_PATH);
+            return $view;
+        });
+
+        Task\BaseTask::flushTask();
+        Task\BaseTask::initData();
+        (new \Phalcon\Mvc\Application($di))->handle();
+        Task\BaseTask::handleTaskRefresh();
     }
 }
