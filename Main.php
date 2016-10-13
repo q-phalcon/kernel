@@ -376,7 +376,7 @@ class Main
         $router = new \Phalcon\Mvc\Router();
         $router->setDefaults([
             "namespace" => 'App\Task',
-            "controller" => 'QpTask',
+            "controller" => 'Task',
             "action" => 'kernel',
         ]);
 
